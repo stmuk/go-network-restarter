@@ -65,6 +65,7 @@ func main() {
 			fmt.Printf(res)
 		}
 		reboot()
+		email()
 	}
 
 }
@@ -94,6 +95,20 @@ func reboot() {
 	child.SendLine("root")
 	child.Expect("#")
 	child.SendLine("reboot")
+	child.SendLine("")
+	child.Interact()
+	child.Close()
+
+}
+
+func email() {
+
+	child, err := gexpect.Spawn("/bin/bash")
+	if err != nil {
+		panic(err)
+	}
+	child.Expect("%")
+	child.SendLine("echo \"router reboot\" | mail -s \"router reboot\" steve.mynott@gmail.com")
 	child.SendLine("")
 	child.Interact()
 	child.Close()
