@@ -12,8 +12,9 @@ import (
 	"github.com/tatsushid/go-fastping"
 )
 
-const pings = 10
-const routerUrl = "http://192.168.0.1/"
+const pings = 1
+const routerUrl = "http://192.168.0.1/setup.cgi?todo=debug"
+
 const testHost = "8.8.8.8" // Google DNS as ping test
 
 func main() {
@@ -47,7 +48,7 @@ func main() {
 
 	fmt.Printf("avg: %f", avg)
 
-	if avg > 10 {
+	if avg > 1 { // XXX
 		fmt.Printf(httpReq(user, pw, routerUrl))
 	}
 
@@ -56,6 +57,7 @@ func main() {
 func httpReq(user string, pw string, routerUrl string) string {
 
 	client := &http.Client{}
+
 	req, err := http.NewRequest("GET", routerUrl, nil)
 	req.SetBasicAuth(user, pw)
 	resp, err := client.Do(req)
