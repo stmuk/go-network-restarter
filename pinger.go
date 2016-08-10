@@ -13,10 +13,11 @@ import (
 	"github.com/tatsushid/go-fastping"
 )
 
-const pings = 1
+const pings = 10
 const routerUrl = "http://192.168.0.1/setup.cgi?todo=debug"
 
 const testHost = "8.8.8.8" // Google DNS as ping test
+const trigger = 500        // greater than 500ms ping for router reboot
 
 func main() {
 
@@ -58,17 +59,17 @@ func main() {
 		fmt.Printf("avg: %f", avg)
 	}
 
-	if avg > 1 { // XXX
-		res := httpReq(user, pw, routerUrl)
+	if avg > trigger {
+		res := enableDebug(user, pw, routerUrl)
 		if debug {
 			fmt.Printf(res)
 		}
-		sendCmd()
+		reboot()
 	}
 
 }
 
-func httpReq(user string, pw string, routerUrl string) string {
+func enableDebug(user string, pw string, routerUrl string) string {
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", routerUrl, nil)
@@ -83,7 +84,7 @@ func httpReq(user string, pw string, routerUrl string) string {
 
 }
 
-func sendCmd() {
+func reboot() {
 
 	child, err := gexpect.Spawn("telnet 192.168.0.1")
 	if err != nil {
@@ -92,8 +93,7 @@ func sendCmd() {
 	child.Expect("D7000 login:")
 	child.SendLine("root")
 	child.Expect("#")
-	child.SendLine("echo $USER")
-	child.Expect("root")
+	child.SendLine("reboot")
 	child.SendLine("")
 	child.Interact()
 	child.Close()
