@@ -20,6 +20,11 @@ const testHost = "8.8.8.8" // Google DNS as ping test
 
 func main() {
 
+	var debug bool
+	if os.Getenv("DEBUG") != "" {
+		debug = true
+	}
+
 	user := os.Getenv("netgear_user")
 	pw := os.Getenv("netgear_pw")
 
@@ -35,7 +40,9 @@ func main() {
 		}
 		p.AddIPAddr(ra)
 		p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
-			fmt.Printf("IP Addr: %s receive, RTT: %v\n", addr.String(), rtt)
+			if debug {
+				fmt.Printf("IP Addr: %s receive, RTT: %v\n", addr.String(), rtt)
+			}
 			pingTot += float32(rtt)
 		}
 
@@ -47,10 +54,15 @@ func main() {
 
 	avg := (pingTot / (pings * 1000000))
 
-	fmt.Printf("avg: %f", avg)
+	if debug {
+		fmt.Printf("avg: %f", avg)
+	}
 
 	if avg > 1 { // XXX
-		fmt.Printf(httpReq(user, pw, routerUrl))
+		res := httpReq(user, pw, routerUrl)
+		if debug {
+			fmt.Printf(res)
+		}
 		sendCmd()
 	}
 
@@ -59,7 +71,6 @@ func main() {
 func httpReq(user string, pw string, routerUrl string) string {
 
 	client := &http.Client{}
-
 	req, err := http.NewRequest("GET", routerUrl, nil)
 	req.SetBasicAuth(user, pw)
 	resp, err := client.Do(req)
@@ -69,9 +80,11 @@ func httpReq(user string, pw string, routerUrl string) string {
 	bodyText, err := ioutil.ReadAll(resp.Body)
 	s := string(bodyText)
 	return s
+
 }
 
 func sendCmd() {
+
 	child, err := gexpect.Spawn("telnet 192.168.0.1")
 	if err != nil {
 		panic(err)
@@ -84,4 +97,5 @@ func sendCmd() {
 	child.SendLine("")
 	child.Interact()
 	child.Close()
+
 }
