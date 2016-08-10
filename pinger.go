@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/ThomasRooney/gexpect"
 	"github.com/tatsushid/go-fastping"
 )
 
@@ -50,6 +51,7 @@ func main() {
 
 	if avg > 1 { // XXX
 		fmt.Printf(httpReq(user, pw, routerUrl))
+		sendCmd()
 	}
 
 }
@@ -67,4 +69,19 @@ func httpReq(user string, pw string, routerUrl string) string {
 	bodyText, err := ioutil.ReadAll(resp.Body)
 	s := string(bodyText)
 	return s
+}
+
+func sendCmd() {
+	child, err := gexpect.Spawn("telnet 192.168.0.1")
+	if err != nil {
+		panic(err)
+	}
+	child.Expect("D7000 login:")
+	child.SendLine("root")
+	child.Expect("#")
+	child.SendLine("echo $USER")
+	child.Expect("root")
+	child.SendLine("")
+	child.Interact()
+	child.Close()
 }
